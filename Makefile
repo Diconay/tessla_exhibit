@@ -6,7 +6,7 @@ OBJDIR  = build
 TARGET  = build/TESSla
 
 # наше приложение
-APP_SRCS = main.c
+APP_SRCS = main.c keyboard.c
 
 # поиск FBDEV-драйвера в типичных местах (v9 и др.)
 FBDEV_SRC := $(firstword \

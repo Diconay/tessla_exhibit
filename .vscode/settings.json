@@ -2,7 +2,8 @@
     "files.associations": {
         "unistd.h": "c",
         "stdlib.h": "c",
-        "lv_linux_fbdev.h": "c"
+        "lv_linux_fbdev.h": "c",
+        "keyboard.h": "c"
     },
     "cmake.sourceDirectory": "/home/dev/develop/lvgl_dev/lvgl/env_support/esp/rlottie"
 }
