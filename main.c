@@ -16,12 +16,11 @@ int main(void) {
     lv_init();
     lv_linux_disp_init();
 
-    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(COLOR_GRAFIT2), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(COLOR_GRAFIT1), LV_PART_MAIN);
 
     lv_obj_t * label = lv_label_create(lv_screen_active());
     lv_label_set_text(label, "Main");
     lv_obj_set_style_text_color(lv_screen_active(), lv_color_hex(COLOR_TEXT), LV_PART_MAIN);
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_26, 0);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
 
     while (1)
