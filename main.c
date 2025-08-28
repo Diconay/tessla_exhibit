@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
+//#include "fonts/fonts.h"
+#include "fonts/castom_fonts.h"
 #include "keyboard.h"
 
 #define COLOR_GRAFIT   0x494d4e //0x3b3b48
@@ -36,26 +38,28 @@ int main(void) {
     lv_obj_t *screen_mode = lv_screen_active();
     lv_obj_set_style_bg_color(screen_mode, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
     lv_obj_t *label_mode = lv_label_create(screen_mode);
-    lv_label_set_text(label_mode, "Main screen");
+    lv_label_set_text(label_mode, "Главный экран");
     lv_obj_set_style_text_color(label_mode, lv_color_hex(COLOR_TEXT), LV_PART_MAIN);
     lv_obj_align(label_mode, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_text_font(label_mode, &lv_font_montserrat_30, 0);
+    lv_obj_set_style_text_font(label_mode, &font_mulish_medium48, 0);
 
     /* Menu screen */
     lv_obj_t *screen_menu = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_menu, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
     lv_obj_t *label_menu = lv_label_create(screen_menu);
-    lv_label_set_text(label_menu, "Menu");
+    lv_label_set_text(label_menu, "Меню");
     lv_obj_set_style_text_color(label_menu, lv_color_hex(COLOR_TEXT), LV_PART_MAIN);
     lv_obj_align(label_menu, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_text_font(label_menu, &font_mulish_medium48, 0);
 
     // Data screen
     lv_obj_t *screen_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_data, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
     lv_obj_t *label_data = lv_label_create(screen_data);
-    lv_label_set_text(label_data, "data screen");
+    lv_label_set_text(label_data, "Данные");
     lv_obj_set_style_text_color(label_data, lv_color_hex(COLOR_TEXT), LV_PART_MAIN);
     lv_obj_align(label_data, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_set_style_text_font(label_data, &font_mulish_medium48, 0);
 
     struct keyboard kb;
     if (keyboard_init(&kb) != 0) {
