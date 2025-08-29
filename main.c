@@ -5,6 +5,7 @@
 
 #include "ui.h"
 #include "keyboard.h"
+#include <stdbool.h>
 
 #define DEFAULT_FBDEV   "/dev/fb0"
 
@@ -22,6 +23,9 @@ static void * tick_thread(void * data)
     }
     return NULL;
 }
+
+    bool sim_running = false;
+    int32_t gen_kw = 0;
 
 int main(void) {
     lv_init();
@@ -43,9 +47,24 @@ int main(void) {
     {
         lv_timer_handler();
         keyboard_poll(&kb);
+
+        if (kb.state.start)
+            sim_running = true;
+        if (kb.state.stop) {
+            sim_running = false;
+            gen_kw = 0;
+        }
+
+        if (sim_running) {
+            gen_kw += 5;
+            if (gen_kw > 1000)
+                gen_kw = 1000;
+        }
+
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
         if (kb.state.menu) lv_screen_load(ui.screen_menu);
         if (kb.state.data) lv_screen_load(ui.screen_data);
+        
         usleep(5000);
     }
     keyboard_deinit(&kb);
