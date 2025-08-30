@@ -4,12 +4,17 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "ui.h"
 #include "keyboard.h"
 #include <stdbool.h>
 
 #define DEFAULT_FBDEV   "/dev/fb0"
+
+#define OIL_CHANGE_INTERVAL   100
+#define AIR_FILTER_INTERVAL   200
+#define SPARK_PLUG_INTERVAL   300
 
 static void lv_linux_disp_init(void) {
     lv_display_t * disp = lv_linux_fbdev_create();
@@ -26,9 +31,16 @@ static void * tick_thread(void * data)
     return NULL;
 }
 
-    bool sim_running = false;
-    int32_t gen_kw = 0;
-    lv_value_precise_t grid_freq = 50.0f;
+static bool sim_running = false;
+static int32_t gen_kw = 0;
+static lv_value_precise_t grid_freq = 50.0f;
+
+/* statistics counters */
+static double runtime_hours = 0.0;
+static double generation_kwh = 0.0;
+static double oil_hours = 0.0;
+static double air_filter_hours = 0.0;
+static double plug_hours = 0.0;
 
 
 int main(void) {
@@ -36,6 +48,12 @@ int main(void) {
     lv_linux_disp_init();
 
     srand(time(NULL));
+    oil_hours       = rand() % OIL_CHANGE_INTERVAL;
+    air_filter_hours= rand() % AIR_FILTER_INTERVAL;
+    plug_hours      = rand() % SPARK_PLUG_INTERVAL;
+    runtime_hours   = (oil_hours + air_filter_hours + plug_hours) * 5 + 2345;
+    generation_kwh  = runtime_hours * 600.0;
+
 
     pthread_t tick_th;
     pthread_create(&tick_th, NULL, tick_thread, NULL);
@@ -49,6 +67,10 @@ int main(void) {
         return 1;
     }
     lv_screen_load(ui.screen_mode);
+
+    struct timespec ts_prev;
+    clock_gettime(CLOCK_MONOTONIC, &ts_prev);
+
     while (1)
     {
         lv_timer_handler();
@@ -70,6 +92,41 @@ int main(void) {
         } else {
             gen_kw = 0;
         }
+
+        struct timespec ts_now;
+        clock_gettime(CLOCK_MONOTONIC, &ts_now);
+        double elapsed_sec = (ts_now.tv_sec - ts_prev.tv_sec) +
+                             (ts_now.tv_nsec - ts_prev.tv_nsec) / 1e9;
+        ts_prev = ts_now;
+        double sim_hours = elapsed_sec / 60.0; /* 1 real min -> 1 sim hour */
+
+        if (sim_running) {
+            runtime_hours += sim_hours;
+            oil_hours += sim_hours;
+            air_filter_hours += sim_hours;
+            plug_hours += sim_hours;
+            generation_kwh += gen_kw * sim_hours;
+
+            if (oil_hours >= OIL_CHANGE_INTERVAL)
+                oil_hours = 0;
+            if (air_filter_hours >= AIR_FILTER_INTERVAL)
+                air_filter_hours = 0;
+            if (plug_hours >= SPARK_PLUG_INTERVAL)
+                plug_hours = 0;
+        }
+
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%d ч", (int)oil_hours);
+        ui_update_stat_oil(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)air_filter_hours);
+        ui_update_stat_air(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)plug_hours);
+        ui_update_stat_plug(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)runtime_hours);
+        ui_update_stat_runtime(buf);
+        snprintf(buf, sizeof(buf), "%.0f кВтч", generation_kwh);
+        ui_update_stat_generation(buf);
+
         lv_value_precise_t delta = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 1000.0f;
         grid_freq += delta;
         if (grid_freq > 50.05f)
