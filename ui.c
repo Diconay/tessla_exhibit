@@ -11,7 +11,35 @@ static const int STATUS_BAR_H = 60;
 static lv_obj_t *scale_line;
 static lv_obj_t *needle_line;
 static lv_obj_t *power_label;
-static lv_obj_t *freq_label;
+
+/* labels of "Сеть" panel */
+static lv_obj_t *mains_p_label;
+static lv_obj_t *mains_q_label;
+static lv_obj_t *mains_cos_label;
+static lv_obj_t *mains_freq_label;
+static lv_obj_t *mains_ua_label;
+static lv_obj_t *mains_ub_label;
+static lv_obj_t *mains_uc_label;
+
+/* labels of "Статистика" panel */
+static lv_obj_t *stat_oil_label;
+static lv_obj_t *stat_air_label;
+static lv_obj_t *stat_plug_label;
+static lv_obj_t *stat_runtime_label;
+static lv_obj_t *stat_generation_label;
+
+/* labels of "Генератор" panel */
+static lv_obj_t *gen_p_label;
+static lv_obj_t *gen_s_label;
+static lv_obj_t *gen_freq_label;
+static lv_obj_t *gen_ua_label;
+static lv_obj_t *gen_ub_label;
+static lv_obj_t *gen_uc_label;
+
+/* labels of "Двигатель" panel */
+static lv_obj_t *engine_oil_label;
+static lv_obj_t *engine_coolant_label;
+static lv_obj_t *engine_rpm_label;
 
 static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
@@ -165,9 +193,112 @@ void ui_update_power(int32_t value)
 
 void ui_update_freq(float value)
 {
-    lv_label_set_text_fmt(freq_label, "%.2f Гц", value);
+    lv_label_set_text_fmt(mains_freq_label, "%.2f Гц", value);
 }
 
+/* обновление значений панели "Сеть" */
+void ui_update_mains_p(int32_t value)
+{
+    lv_label_set_text_fmt(mains_p_label, "%d кВт", value);
+}
+
+void ui_update_mains_q(int32_t value)
+{
+    lv_label_set_text_fmt(mains_q_label, "%d кВАр", value);
+}
+
+void ui_update_mains_cos(float value)
+{
+    lv_label_set_text_fmt(mains_cos_label, "%.2f", value);
+}
+
+void ui_update_mains_ua(float value)
+{
+    lv_label_set_text_fmt(mains_ua_label, "%.2f кВ", value);
+}
+
+void ui_update_mains_ub(float value)
+{
+    lv_label_set_text_fmt(mains_ub_label, "%.2f кВ", value);
+}
+
+void ui_update_mains_uc(float value)
+{
+    lv_label_set_text_fmt(mains_uc_label, "%.2f кВ", value);
+}
+
+/* обновление панели "Статистика" */
+void ui_update_stat_oil(const char *value)
+{
+    lv_label_set_text(stat_oil_label, value);
+}
+
+void ui_update_stat_air(const char *value)
+{
+    lv_label_set_text(stat_air_label, value);
+}
+
+void ui_update_stat_plug(const char *value)
+{
+    lv_label_set_text(stat_plug_label, value);
+}
+
+void ui_update_stat_runtime(const char *value)
+{
+    lv_label_set_text(stat_runtime_label, value);
+}
+
+void ui_update_stat_generation(const char *value)
+{
+    lv_label_set_text(stat_generation_label, value);
+}
+
+/* обновление панели "Генератор" */
+void ui_update_gen_p(int32_t value)
+{
+    lv_label_set_text_fmt(gen_p_label, "%d кВт", value);
+}
+
+void ui_update_gen_s(int32_t value)
+{
+    lv_label_set_text_fmt(gen_s_label, "%d кВА", value);
+}
+
+void ui_update_gen_freq(float value)
+{
+    lv_label_set_text_fmt(gen_freq_label, "%.2f Гц", value);
+}
+
+void ui_update_gen_ua(float value)
+{
+    lv_label_set_text_fmt(gen_ua_label, "%.2f кВ", value);
+}
+
+void ui_update_gen_ub(float value)
+{
+    lv_label_set_text_fmt(gen_ub_label, "%.2f кВ", value);
+}
+
+void ui_update_gen_uc(float value)
+{
+    lv_label_set_text_fmt(gen_uc_label, "%.2f кВ", value);
+}
+
+/* обновление панели "Двигатель" */
+void ui_update_engine_oil(float value)
+{
+    lv_label_set_text_fmt(engine_oil_label, "%.1f кПа", value);
+}
+
+void ui_update_engine_coolant(float value)
+{
+    lv_label_set_text_fmt(engine_coolant_label, "%.1f °C", value);
+}
+
+void ui_update_engine_rpm(int32_t value)
+{
+    lv_label_set_text_fmt(engine_rpm_label, "%d об/мин", value);
+}
 void ui_init(struct ui *ui)
 {
     lv_obj_t *screen_mode = lv_screen_active();
@@ -193,22 +324,22 @@ void ui_init(struct ui *ui)
     lv_obj_t *mains_panel = make_panel(root, "Сеть");
     lv_obj_set_grid_cell(mains_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
     lv_obj_set_flex_align(mains_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    add_row(mains_panel, "P сети:", "111 кВт");
-    add_row(mains_panel, "Q сети:", "6 кВАр");
-    add_row(mains_panel, "cos:", "0.99");
-    freq_label = add_row(mains_panel, "F сети:", "50.00 Гц");
-    add_row(mains_panel, "Ua:", "6.27 кВ");
-    add_row(mains_panel, "Uб:", "6.16 кВ");
-    add_row(mains_panel, "Uc:", "6.17 кВ");
+    mains_p_label   = add_row(mains_panel, "P сети:", "111 кВт");
+    mains_q_label   = add_row(mains_panel, "Q сети:", "6 кВАр");
+    mains_cos_label = add_row(mains_panel, "cos:", "0.99");
+    mains_freq_label = add_row(mains_panel, "F сети:", "50.00 Гц");
+    mains_ua_label  = add_row(mains_panel, "Ua:", "6.27 кВ");
+    mains_ub_label  = add_row(mains_panel, "Uб:", "6.16 кВ");
+    mains_uc_label  = add_row(mains_panel, "Uc:", "6.17 кВ");
 
     lv_obj_t *stat_panel = make_panel(root, "Статистика");
     lv_obj_set_grid_cell(stat_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
     lv_obj_set_flex_align(stat_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    add_row(stat_panel, "Масло:", "—");
-    add_row(stat_panel, "Возд. фильтр:", "—");
-    add_row(stat_panel, "Свечи:", "—");
-    add_row(stat_panel, "Наработка:", "—");
-    add_row(stat_panel, "Выработка:", "—");
+    stat_oil_label        = add_row(stat_panel, "Масло:", "—");
+    stat_air_label        = add_row(stat_panel, "Возд. фильтр:", "—");
+    stat_plug_label       = add_row(stat_panel, "Свечи:", "—");
+    stat_runtime_label    = add_row(stat_panel, "Наработка:", "—");
+    stat_generation_label = add_row(stat_panel, "Выработка:", "—");
 
     lv_obj_t *power_panel = make_panel(root, "Мощность\n");
     lv_obj_set_grid_cell(power_panel, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
@@ -218,19 +349,19 @@ void ui_init(struct ui *ui)
     lv_obj_t *gen_panel = make_panel(root, "Генератор");
     lv_obj_set_grid_cell(gen_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
     lv_obj_set_flex_align(gen_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    add_row(gen_panel, "P:", "—");
-    add_row(gen_panel, "S:", "—");
-    add_row(gen_panel, "F:", "—");
-    add_row(gen_panel, "Ua:", "—");
-    add_row(gen_panel, "Ub:", "—");
-    add_row(gen_panel, "Uc:", "—");
+    gen_p_label  = add_row(gen_panel, "P:", "—");
+    gen_s_label  = add_row(gen_panel, "S:", "—");
+    gen_freq_label = add_row(gen_panel, "F:", "—");
+    gen_ua_label = add_row(gen_panel, "Ua:", "—");
+    gen_ub_label = add_row(gen_panel, "Ub:", "—");
+    gen_uc_label = add_row(gen_panel, "Uc:", "—");
 
     lv_obj_t *engine_panel = make_panel(root, "Двигатель");
     lv_obj_set_grid_cell(engine_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
     lv_obj_set_flex_align(engine_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    add_row(engine_panel, "Давл. масла:", "—");
-    add_row(engine_panel, "Темп. охл. жид:", "—");
-    add_row(engine_panel, "Обороты:", "—");
+    engine_oil_label     = add_row(engine_panel, "Давл. масла:", "—");
+    engine_coolant_label = add_row(engine_panel, "Темп. охл. жид:", "—");
+    engine_rpm_label     = add_row(engine_panel, "Обороты:", "—");
 
     add_status_bar(screen_mode, "Управление ГПУ");
 
