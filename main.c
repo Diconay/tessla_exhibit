@@ -34,6 +34,12 @@ static void * tick_thread(void * data)
 static bool sim_running = false;
 static int32_t gen_kw = 0;
 static lv_value_precise_t grid_freq = 50.0f;
+static int32_t mains_p = 111;
+static int32_t mains_q = 0;
+static lv_value_precise_t mains_cos = 0.99f;
+static lv_value_precise_t mains_ua = 6.27f;
+static lv_value_precise_t mains_ub = 6.16f;
+static lv_value_precise_t mains_uc = 6.17f;
 
 /* statistics counters */
 static double runtime_hours = 0.0;
@@ -137,6 +143,51 @@ int main(void) {
         ui_update_power(gen_kw);
         ui_update_freq(grid_freq);
         
+        int delta_p = (rand() % 11) - 5;
+        mains_p += delta_p;
+        if (mains_p > 543)
+            mains_p = 543;
+        if (mains_p < 98)
+            mains_p = 98;
+
+        lv_value_precise_t delta_cos = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 1000.0f;
+        mains_cos += delta_cos;
+        if (mains_cos > 0.99f)
+            mains_cos = 0.99f;
+        if (mains_cos < 0.87f)
+            mains_cos = 0.87f;
+
+        lv_value_precise_t delta_ua = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 100.0f;
+        mains_ua += delta_ua;
+        if (mains_ua > 6.3f)
+            mains_ua = 6.3f;
+        if (mains_ua < 6.0f)
+            mains_ua = 6.0f;
+
+        lv_value_precise_t delta_ub = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 100.0f;
+        mains_ub += delta_ub;
+        if (mains_ub > 6.3f)
+            mains_ub = 6.3f;
+        if (mains_ub < 6.0f)
+            mains_ub = 6.0f;
+
+        lv_value_precise_t delta_uc = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 100.0f;
+        mains_uc += delta_uc;
+        if (mains_uc > 6.3f)
+            mains_uc = 6.3f;
+        if (mains_uc < 6.0f)
+            mains_uc = 6.0f;
+
+        mains_q = mains_p * sqrt(1.0 / (mains_cos * mains_cos) - 1.0);
+
+        ui_update_power(gen_kw);
+        ui_update_freq(grid_freq);
+        ui_update_mains_p(mains_p);
+        ui_update_mains_q(mains_q);
+        ui_update_mains_cos(mains_cos);
+        ui_update_mains_ua(mains_ua);
+        ui_update_mains_ub(mains_ub);
+        ui_update_mains_uc(mains_uc);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
         //if (kb.state.menu) lv_screen_load(ui.screen_menu);
