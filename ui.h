@@ -12,5 +12,6 @@ struct ui {
 void ui_init(struct ui *ui);
 void ui_update_power(int32_t value);
 void ui_create(void);
+void ui_update_freq(float value);
 
 #endif // UI_H

@@ -11,6 +11,7 @@ static const int STATUS_BAR_H = 60;
 static lv_obj_t *scale_line;
 static lv_obj_t *needle_line;
 static lv_obj_t *power_label;
+static lv_obj_t *freq_label;
 
 static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
@@ -56,7 +57,7 @@ static lv_obj_t *make_panel(lv_obj_t *parent, const char *title) {
     return cont;
 }
 
-static void add_row(lv_obj_t *parent, const char *left, const char *right) {
+static lv_obj_t *add_row(lv_obj_t *parent, const char *left, const char *right) {
     lv_obj_t *row = lv_obj_create(parent);
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(row, LV_OPA_TRANSP, 0);
@@ -75,6 +76,7 @@ static void add_row(lv_obj_t *parent, const char *left, const char *right) {
     lv_obj_t *v = lv_label_create(row);
     lv_obj_add_style(v, &st_row_val, 0);
     lv_label_set_text(v, right);
+    return v;
 }
 
 static lv_obj_t *add_status_bar(lv_obj_t *parent, const char *title) {
@@ -161,6 +163,11 @@ void ui_update_power(int32_t value)
     lv_label_set_text_fmt(power_label, "%d кВт", value);
 }
 
+void ui_update_freq(float value)
+{
+    lv_label_set_text_fmt(freq_label, "%.2f Гц", value);
+}
+
 void ui_init(struct ui *ui)
 {
     lv_obj_t *screen_mode = lv_screen_active();
@@ -189,7 +196,7 @@ void ui_init(struct ui *ui)
     add_row(mains_panel, "P сети:", "111 кВт");
     add_row(mains_panel, "Q сети:", "6 кВАр");
     add_row(mains_panel, "cos:", "0.99");
-    add_row(mains_panel, "F сети:", "50.01 Гц");
+    freq_label = add_row(mains_panel, "F сети:", "50.00 Гц");
     add_row(mains_panel, "Ua:", "6.27 кВ");
     add_row(mains_panel, "Uб:", "6.16 кВ");
     add_row(mains_panel, "Uc:", "6.17 кВ");

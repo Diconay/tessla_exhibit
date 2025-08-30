@@ -1,7 +1,7 @@
 # ---- настройки ----
 CC      = gcc
 CFLAGS  = -O2 -Wall -I. -Ilvgl -Ilvgl/src -D_DEFAULT_SOURCE -DLV_CONF_INCLUDE_SIMPLE
-LDFLAGS = -lpthread
+LDFLAGS = -lpthread -lm
 OBJDIR  = build
 TARGET  = build/TESSla
 
