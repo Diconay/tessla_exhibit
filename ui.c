@@ -12,7 +12,7 @@ static lv_obj_t *scale_line;
 static lv_obj_t *needle_line;
 static lv_obj_t *power_label;
 
-static lv_style_t st_screen, st_panel, st_title, st_row_lbl, st_row_val;
+static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
 void style_init(void) {
     lv_style_init(&st_panel);
@@ -61,11 +61,11 @@ static void add_row(lv_obj_t *parent, const char *left, const char *right) {
     lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(row, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(row, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_pad_ver(row, 4, 0);
+    lv_obj_set_style_pad_ver(row, 3, 0);
     lv_obj_set_layout(row, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 40);
+    lv_obj_set_height(row, 35);
 
     lv_obj_t *l = lv_label_create(row);
     lv_obj_add_style(l, &st_row_lbl, 0);
@@ -147,10 +147,10 @@ void power_scale(lv_obj_t *screen){
     lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
     lv_obj_set_style_line_color(needle_line, lv_color_white(), LV_PART_MAIN);
     
-    power_label = lv_label_create(screen);
+    power_label = lv_label_create(scale_line);
     lv_obj_set_size(power_label, 200, LV_SIZE_CONTENT);
     lv_obj_set_style_text_color(power_label, lv_color_white(), 0);
-    lv_obj_align_to(power_label, scale_line, LV_ALIGN_CENTER, -80, 35);
+    lv_obj_align_to(power_label, scale_line, LV_FLEX_ALIGN_START, -45, 155);
     lv_obj_set_style_text_font(power_label, &font_mulish_medium36, 0);
     lv_obj_set_style_text_align(power_label, LV_TEXT_ALIGN_RIGHT, 0);
 }
@@ -185,6 +185,7 @@ void ui_init(struct ui *ui)
 
     lv_obj_t *mains_panel = make_panel(root, "Сеть");
     lv_obj_set_grid_cell(mains_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_flex_align(mains_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     add_row(mains_panel, "P сети:", "111 кВт");
     add_row(mains_panel, "Q сети:", "6 кВАр");
     add_row(mains_panel, "cos:", "0.99");
@@ -195,19 +196,21 @@ void ui_init(struct ui *ui)
 
     lv_obj_t *stat_panel = make_panel(root, "Статистика");
     lv_obj_set_grid_cell(stat_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_flex_align(stat_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     add_row(stat_panel, "Масло:", "—");
     add_row(stat_panel, "Возд. фильтр:", "—");
     add_row(stat_panel, "Свечи:", "—");
     add_row(stat_panel, "Наработка:", "—");
     add_row(stat_panel, "Выработка:", "—");
 
-    lv_obj_t *power_panel = make_panel(root, "Мощность");
-    lv_obj_set_grid_cell(power_panel, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    lv_obj_set_flex_align(power_panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_t *power_panel = make_panel(root, "Мощность\n");
+    lv_obj_set_grid_cell(power_panel, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
+    lv_obj_set_flex_align(power_panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     power_scale(power_panel);
 
     lv_obj_t *gen_panel = make_panel(root, "Генератор");
     lv_obj_set_grid_cell(gen_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_flex_align(gen_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     add_row(gen_panel, "P:", "—");
     add_row(gen_panel, "S:", "—");
     add_row(gen_panel, "F:", "—");
@@ -217,6 +220,7 @@ void ui_init(struct ui *ui)
 
     lv_obj_t *engine_panel = make_panel(root, "Двигатель");
     lv_obj_set_grid_cell(engine_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_flex_align(engine_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     add_row(engine_panel, "Давл. масла:", "—");
     add_row(engine_panel, "Темп. охл. жид:", "—");
     add_row(engine_panel, "Обороты:", "—");
