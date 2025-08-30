@@ -69,8 +69,8 @@ int main(void) {
         ui_update_power(gen_kw);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
-        if (kb.state.menu) lv_screen_load(ui.screen_menu);
-        if (kb.state.data) lv_screen_load(ui.screen_data);
+        //if (kb.state.menu) lv_screen_load(ui.screen_menu);
+        //if (kb.state.data) lv_screen_load(ui.screen_data);
         
         usleep(15000);
     }
