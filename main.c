@@ -47,6 +47,7 @@ static const double ENGINE_RPM_TARGET = 1500.0;
 static const double ENGINE_RPM_KP = 0.05;
 static const double ENGINE_RPM_KI = 0.001;
 
+
 /* statistics counters */
 static double runtime_hours = 0.0;
 static double generation_kwh = 0.0;
