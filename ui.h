@@ -10,5 +10,7 @@ struct ui {
 };
 
 void ui_init(struct ui *ui);
+void ui_update_power(int32_t value);
+void ui_create(void);
 
 #endif // UI_H

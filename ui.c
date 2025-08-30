@@ -4,15 +4,80 @@
 #define COLOR_GRAFIT   0x0B1E3A
 #define COLOR_TEXT     0xFFFFFF
 
-static lv_obj_t * needle_line;
+static const int PAD = 10;
+static const int R   = 10;
 
-static void set_needle_line_value(void * obj, int32_t v)
-{
-    lv_scale_set_line_needle_value((lv_obj_t *)obj, needle_line, 102, v);
+static lv_obj_t *scale_line;
+static lv_obj_t *needle_line;
+static lv_obj_t *power_label;
+
+static lv_style_t st_screen, st_panel, st_title, st_row_lbl, st_row_val;
+
+void style_init(void) {
+    lv_style_init(&st_panel);
+    lv_style_set_bg_color(&st_panel, lv_palette_main(COLOR_GRAFIT));
+    lv_style_set_bg_opa(&st_panel, LV_OPA_COVER);
+    lv_style_set_radius(&st_panel, R);
+    lv_style_set_pad_all(&st_panel, PAD);
+
+    lv_style_init(&st_title);
+    lv_style_set_text_color(&st_title, lv_color_white());
+    lv_style_set_text_letter_space(&st_title, 1);
+    lv_style_set_text_font(&st_title, &font_mulish_medium36);
+
+    lv_style_init(&st_row_lbl);
+    lv_style_set_text_color(&st_row_lbl, lv_color_white());
+    lv_style_set_text_font(&st_row_lbl, &font_mulish_medium24);
+
+    lv_style_init(&st_row_val);
+    lv_style_set_text_color(&st_row_val, lv_color_white());
+    lv_style_set_text_font(&st_row_val, &font_mulish_medium24);
+}
+
+static lv_obj_t* make_panel(lv_obj_t* parent, const char* title) {
+    lv_obj_t* cont = lv_obj_create(parent);
+    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(cont, LV_OPA_0, LV_PART_MAIN);
+
+    lv_obj_set_style_border_color(cont, lv_color_white(), 0);
+    lv_obj_set_style_border_opa(cont, LV_OPA_30, 0);
+    lv_obj_set_style_border_width(cont, 2, 0);
+
+
+    lv_obj_set_style_radius(cont, R, 0);
+    lv_obj_set_style_pad_all(cont, PAD, 0);
+    lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    lv_obj_t* t = lv_label_create(cont);
+    lv_obj_add_style(t, &st_title, 0);
+    lv_label_set_text(t, title);
+    return cont;
+}
+
+static void add_row(lv_obj_t* parent, const char* left, const char* right) {
+    lv_obj_t* row = lv_obj_create(parent);
+    lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_pad_ver(row, 4, 0);
+    lv_obj_set_layout(row, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_width(row, LV_PCT(100));
+
+    lv_obj_t* l = lv_label_create(row);
+    lv_obj_add_style(l, &st_row_lbl, 0);
+    lv_label_set_text(l, left);
+    lv_obj_set_flex_grow(l, 1);
+
+    lv_obj_t* v = lv_label_create(row);
+    lv_obj_add_style(v, &st_row_val, 0);
+    lv_label_set_text(v, right);
 }
 
 void power_scale(lv_obj_t *screen){
-    lv_obj_t * scale_line = lv_scale_create(screen);
+    scale_line = lv_scale_create(screen);
     lv_obj_set_size(scale_line, 230, 230);
     lv_scale_set_mode(scale_line, LV_SCALE_MODE_ROUND_OUTER);
     lv_obj_set_style_bg_opa(scale_line, LV_OPA_TRANSP, 0);
@@ -20,6 +85,7 @@ void power_scale(lv_obj_t *screen){
 
     lv_scale_set_label_show(scale_line, true);
     lv_obj_set_style_text_color(scale_line, lv_color_white(), LV_PART_INDICATOR);
+    lv_obj_set_style_text_font(scale_line, &lv_font_montserrat_20, 0);
     lv_obj_set_style_line_color(scale_line, lv_color_white(), LV_PART_ITEMS);
     lv_obj_set_style_line_color(scale_line, lv_color_white(), LV_PART_INDICATOR);
     lv_scale_set_total_tick_count(scale_line, 31);
@@ -63,15 +129,18 @@ void power_scale(lv_obj_t *screen){
     lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
     lv_obj_set_style_line_color(needle_line, lv_color_white(), LV_PART_MAIN);
     
-    lv_anim_t anim_scale_line;
-    lv_anim_init(&anim_scale_line);
-    lv_anim_set_var(&anim_scale_line, scale_line);
-    lv_anim_set_exec_cb(&anim_scale_line, set_needle_line_value);
-    lv_anim_set_duration(&anim_scale_line, 1000);
-    lv_anim_set_repeat_count(&anim_scale_line, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_set_reverse_duration(&anim_scale_line, 1000);
-    lv_anim_set_values(&anim_scale_line, 0, 1000);
-    lv_anim_start(&anim_scale_line);
+    power_label = lv_label_create(screen);
+    lv_obj_set_size(power_label, 200, LV_SIZE_CONTENT);
+    lv_obj_set_style_text_color(power_label, lv_color_white(), 0);
+    lv_obj_align_to(power_label, scale_line, LV_ALIGN_CENTER, -80, 35);
+    lv_obj_set_style_text_font(power_label, &font_mulish_medium36, 0);
+    lv_obj_set_style_text_align(power_label, LV_TEXT_ALIGN_RIGHT, 0);
+}
+
+void ui_update_power(int32_t value)
+{
+    lv_scale_set_line_needle_value(scale_line, needle_line, 102, value);
+    lv_label_set_text_fmt(power_label, "%d кВт", value);
 }
 
 void ui_init(struct ui *ui)
@@ -83,6 +152,28 @@ void ui_init(struct ui *ui)
     lv_obj_set_style_text_color(label_mode, lv_color_hex(COLOR_TEXT), LV_PART_MAIN);
     lv_obj_align(label_mode, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_text_font(label_mode, &font_mulish_medium48, 0);
+
+    style_init();
+
+    static int32_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
+    static int32_t row_dsc[] = { LV_GRID_CONTENT, LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST }; 
+
+    lv_obj_t* root = lv_obj_create(screen_mode);
+    lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_opa(root, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(root, LV_OPA_0, 0);
+    lv_obj_set_grid_dsc_array(root, col_dsc, row_dsc);
+    lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
+
+    lv_obj_t* mains_panel = make_panel(root, "Сеть");
+    lv_obj_set_grid_cell(mains_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_START, 0, 1);
+    add_row(mains_panel, "P сети:", "111 кВт");
+    add_row(mains_panel, "Q сети:", "6 кВАр");
+    add_row(mains_panel, "cos:", "0.99");
+    add_row(mains_panel, "F сети:", "50.01 Гц");
+    add_row(mains_panel, "Ua:", "6.27 кВ");
+    add_row(mains_panel, "Uб:", "6.16 кВ");
+    add_row(mains_panel, "Uc:", "6.17 кВ");
 
     power_scale(screen_mode);
 

@@ -52,20 +52,27 @@ int main(void) {
             sim_running = true;
         if (kb.state.stop) {
             sim_running = false;
-            gen_kw = 0;
+            
         }
 
         if (sim_running) {
-            gen_kw += 5;
+            gen_kw += 1;
             if (gen_kw > 1000)
                 gen_kw = 1000;
+        } else if (gen_kw > 0) {
+            gen_kw -= 1;
+        } else {
+            gen_kw = 0;
         }
+        
+
+        ui_update_power(gen_kw);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
         if (kb.state.menu) lv_screen_load(ui.screen_menu);
         if (kb.state.data) lv_screen_load(ui.screen_data);
         
-        usleep(5000);
+        usleep(15000);
     }
     keyboard_deinit(&kb);
     return 0;
