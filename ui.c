@@ -49,7 +49,7 @@ static lv_obj_t* make_panel(lv_obj_t* parent, const char* title) {
     lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-
+    lv_obj_set_style_pad_row(cont, 6, 0);
     lv_obj_t* t = lv_label_create(cont);
     lv_obj_add_style(t, &st_title, 0);
     lv_label_set_text(t, title);
@@ -156,17 +156,18 @@ void ui_init(struct ui *ui)
     style_init();
 
     static int32_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
-    static int32_t row_dsc[] = { LV_GRID_CONTENT, LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST }; 
+    static int32_t row_dsc[] = { LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST }; 
 
     lv_obj_t* root = lv_obj_create(screen_mode);
-    lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);   
     lv_obj_set_style_bg_opa(root, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(root, LV_OPA_0, 0);
     lv_obj_set_grid_dsc_array(root, col_dsc, row_dsc);
     lv_obj_set_size(root, LV_PCT(100), LV_PCT(100));
 
     lv_obj_t* mains_panel = make_panel(root, "Сеть");
-    lv_obj_set_grid_cell(mains_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_START, 0, 1);
+    lv_obj_set_grid_cell(mains_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    
     add_row(mains_panel, "P сети:", "111 кВт");
     add_row(mains_panel, "Q сети:", "6 кВАр");
     add_row(mains_panel, "cos:", "0.99");
