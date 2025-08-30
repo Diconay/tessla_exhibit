@@ -41,6 +41,12 @@ static lv_value_precise_t mains_ua = 6.27f;
 static lv_value_precise_t mains_ub = 6.16f;
 static lv_value_precise_t mains_uc = 6.17f;
 
+static double engine_rpm = 0.0;
+static double engine_rpm_integral = 0.0;
+static const double ENGINE_RPM_TARGET = 1500.0;
+static const double ENGINE_RPM_KP = 0.05;
+static const double ENGINE_RPM_KI = 0.001;
+
 /* statistics counters */
 static double runtime_hours = 0.0;
 static double generation_kwh = 0.0;
@@ -104,7 +110,7 @@ int main(void) {
         double elapsed_sec = (ts_now.tv_sec - ts_prev.tv_sec) +
                              (ts_now.tv_nsec - ts_prev.tv_nsec) / 1e9;
         ts_prev = ts_now;
-        double sim_hours = elapsed_sec / 60.0; /* 1 real min -> 1 sim hour */
+        double sim_hours = elapsed_sec / 60.0;
 
         if (sim_running) {
             runtime_hours += sim_hours;
@@ -120,6 +126,17 @@ int main(void) {
             if (plug_hours >= SPARK_PLUG_INTERVAL)
                 plug_hours = 0;
         }
+        elapsed_sec = 0.0;
+        double target_rpm = sim_running ? ENGINE_RPM_TARGET : 0.0;
+        double rpm_error = target_rpm - engine_rpm;
+        engine_rpm_integral += rpm_error * elapsed_sec;
+        double rpm_output = ENGINE_RPM_KP * rpm_error + ENGINE_RPM_KI * engine_rpm_integral;
+        //engine_rpm += rpm_output * elapsed_sec;
+        engine_rpm += rpm_output;
+        if (engine_rpm < 0) engine_rpm = 0;
+        if (engine_rpm > 4000) engine_rpm = 4000;
+        if (!sim_running) engine_rpm_integral = 0;
+        ui_update_engine_rpm((int32_t)engine_rpm);
 
         char buf[32];
         snprintf(buf, sizeof(buf), "%d ч", (int)oil_hours);
