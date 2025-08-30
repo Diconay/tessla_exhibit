@@ -48,8 +48,8 @@ static lv_obj_t* make_panel(lv_obj_t* parent, const char* title) {
     lv_obj_set_style_pad_all(cont, PAD, 0);
     lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_row(cont, 6, 0);
+    // lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_row(cont, 2, 0);
     lv_obj_t* t = lv_label_create(cont);
     lv_obj_add_style(t, &st_title, 0);
     lv_label_set_text(t, title);
@@ -65,6 +65,7 @@ static void add_row(lv_obj_t* parent, const char* left, const char* right) {
     lv_obj_set_layout(row, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_height(row, 40);
 
     lv_obj_t* l = lv_label_create(row);
     lv_obj_add_style(l, &st_row_lbl, 0);
@@ -156,7 +157,7 @@ void ui_init(struct ui *ui)
     style_init();
 
     static int32_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
-    static int32_t row_dsc[] = { LV_GRID_FR(1), LV_GRID_CONTENT, LV_GRID_TEMPLATE_LAST }; 
+    static int32_t row_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST }; 
 
     lv_obj_t* root = lv_obj_create(screen_mode);
     lv_obj_remove_flag(root, LV_OBJ_FLAG_SCROLLABLE);   
@@ -176,7 +177,33 @@ void ui_init(struct ui *ui)
     add_row(mains_panel, "Uб:", "6.16 кВ");
     add_row(mains_panel, "Uc:", "6.17 кВ");
 
-    power_scale(screen_mode);
+    lv_obj_t* stat_panel = make_panel(root, "Статистика");
+    lv_obj_set_grid_cell(stat_panel, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    add_row(stat_panel, "Масло:", "—");
+    add_row(stat_panel, "Возд. фильтр:", "—");
+    add_row(stat_panel, "Свечи:", "—");
+    add_row(stat_panel, "Наработка:", "—");
+    add_row(stat_panel, "Выработка:", "—");
+
+    lv_obj_t* power_panel = make_panel(root, "Мощность");
+    lv_obj_set_grid_cell(power_panel, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_flex_align(power_panel, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    power_scale(power_panel);
+
+    lv_obj_t* gen_panel = make_panel(root, "Генератор");
+    lv_obj_set_grid_cell(gen_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    add_row(gen_panel, "P:", "—");
+    add_row(gen_panel, "S:", "—");
+    add_row(gen_panel, "F:", "—");
+    add_row(gen_panel, "Ua:", "—");
+    add_row(gen_panel, "Ub:", "—");
+    add_row(gen_panel, "Uc:", "—");
+
+    lv_obj_t* engine_panel = make_panel(root, "Двигатель");
+    lv_obj_set_grid_cell(engine_panel, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    add_row(engine_panel, "Давл. масла:", "—");
+    add_row(engine_panel, "Темп. охл. жид:", "—");
+    add_row(engine_panel, "Обороты:", "—");
 
     lv_obj_t *screen_menu = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_menu, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
