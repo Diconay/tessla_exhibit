@@ -148,21 +148,21 @@ void power_scale(lv_obj_t *screen){
     lv_obj_set_style_arc_width(scale_line, 6, LV_PART_MAIN);
     lv_obj_set_style_arc_color(scale_line, lv_color_white(), LV_PART_MAIN);
 
-    lv_obj_t *seg_green = lv_arc_create(scale_line);
-    lv_obj_remove_style_all(seg_green);
-    lv_obj_set_size(seg_green, 200, 200);
-    lv_arc_set_bg_angles(seg_green, 180, 300);
-    lv_obj_set_style_arc_width(seg_green, 40, 0);
-    lv_obj_set_style_arc_color(seg_green, lv_palette_main(LV_PALETTE_GREEN), 0);
-    lv_obj_center(seg_green);
-
     lv_obj_t *seg_yellow = lv_arc_create(scale_line);
     lv_obj_remove_style_all(seg_yellow);
     lv_obj_set_size(seg_yellow, 200, 200);
-    lv_arc_set_bg_angles(seg_yellow, 300, 0);
+    lv_arc_set_bg_angles(seg_yellow, 180, 270);
     lv_obj_set_style_arc_width(seg_yellow, 40, 0);
     lv_obj_set_style_arc_color(seg_yellow, lv_palette_main(LV_PALETTE_YELLOW), 0);
     lv_obj_center(seg_yellow);
+
+    lv_obj_t *seg_green = lv_arc_create(scale_line);
+    lv_obj_remove_style_all(seg_green);
+    lv_obj_set_size(seg_green, 200, 200);
+    lv_arc_set_bg_angles(seg_green, 270, 0);
+    lv_obj_set_style_arc_width(seg_green, 40, 0);
+    lv_obj_set_style_arc_color(seg_green, lv_palette_main(LV_PALETTE_GREEN), 0);
+    lv_obj_center(seg_green);
 
     lv_obj_t *seg_red = lv_arc_create(scale_line);
     lv_obj_remove_style_all(seg_red);
@@ -287,12 +287,12 @@ void ui_update_gen_uc(float value)
 /* обновление панели "Двигатель" */
 void ui_update_engine_oil(float value)
 {
-    lv_label_set_text_fmt(engine_oil_label, "%.1f кПа", value);
+    lv_label_set_text_fmt(engine_oil_label, "%.1f бар", value);
 }
 
 void ui_update_engine_coolant(float value)
 {
-    lv_label_set_text_fmt(engine_coolant_label, "%.1f °C", value);
+    lv_label_set_text_fmt(engine_coolant_label, "%.1f C", value);
 }
 
 void ui_update_engine_rpm(int32_t value)

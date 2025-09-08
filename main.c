@@ -16,6 +16,19 @@
 #define AIR_FILTER_INTERVAL   200
 #define SPARK_PLUG_INTERVAL   300
 
+#define GPU_STOPED  0
+#define GPU_START   1
+#define GPU_STOP    2
+#define GPU_STABILIZATION    3
+#define GPU_WARM    4
+#define GPU_LANCH 5
+#define GPU_WORK 6
+#define GPU_POWER_DOWN 7
+#define GPU_COOL 8
+#define GPU_STOPING 9
+
+
+
 static void lv_linux_disp_init(void) {
     lv_display_t * disp = lv_linux_fbdev_create();
     lv_linux_fbdev_set_file(disp, DEFAULT_FBDEV);
@@ -31,21 +44,26 @@ static void * tick_thread(void * data)
     return NULL;
 }
 
-static bool sim_running = false;
+static int32_t gpu_state;
 static int32_t gen_kw = 0;
 static lv_value_precise_t grid_freq = 50.0f;
 static int32_t mains_p = 111;
 static int32_t mains_q = 0;
+static int32_t load = 0;
 static lv_value_precise_t mains_cos = 0.99f;
 static lv_value_precise_t mains_ua = 6.27f;
 static lv_value_precise_t mains_ub = 6.16f;
 static lv_value_precise_t mains_uc = 6.17f;
 
 static double engine_rpm = 0.0;
-static double engine_rpm_integral = 0.0;
-static const double ENGINE_RPM_TARGET = 1500.0;
-static const double ENGINE_RPM_KP = 0.05;
-static const double ENGINE_RPM_KI = 0.001;
+static lv_value_precise_t oil_pressure;
+static const double ENGINE_OIL_PRESSURE_MAX = 6.0; // bar
+static const double ENGINE_OIL_PRESSURE_RPM_LIMIT = 1000.0; // rpm at which pressure stops increasing
+static lv_value_precise_t gen_ua = 0.0f;
+static lv_value_precise_t gen_ub = 0.0f;
+static lv_value_precise_t gen_uc = 0.0f;
+static lv_value_precise_t gen_freq = 0.0f;
+static lv_value_precise_t gen_t = 17.2f;
 
 
 /* statistics counters */
@@ -56,11 +74,16 @@ static double air_filter_hours = 0.0;
 static double plug_hours = 0.0;
 
 
+float generate_noise(float amplitude) {
+    return (float)rand() / RAND_MAX * 2 * amplitude - amplitude;
+}
+
 int main(void) {
     lv_init();
     lv_linux_disp_init();
 
     srand(time(NULL));
+    gpu_state = GPU_STOPED;
     oil_hours       = rand() % OIL_CHANGE_INTERVAL;
     air_filter_hours= rand() % AIR_FILTER_INTERVAL;
     plug_hours      = rand() % SPARK_PLUG_INTERVAL;
@@ -89,68 +112,6 @@ int main(void) {
         lv_timer_handler();
         keyboard_poll(&kb);
 
-        if (kb.state.start)
-            sim_running = true;
-        if (kb.state.stop) {
-            sim_running = false;
-            
-        }
-
-        if (sim_running) {
-            gen_kw += 1;
-            if (gen_kw > 1000)
-                gen_kw = 1000;
-        } else if (gen_kw > 0) {
-            gen_kw -= 0.1;
-        } else {
-            gen_kw = 0;
-        }
-
-        struct timespec ts_now;
-        clock_gettime(CLOCK_MONOTONIC, &ts_now);
-        double elapsed_sec = (ts_now.tv_sec - ts_prev.tv_sec) +
-                             (ts_now.tv_nsec - ts_prev.tv_nsec) / 1e9;
-        ts_prev = ts_now;
-        double sim_hours = elapsed_sec / 60.0;
-
-        if (sim_running) {
-            runtime_hours += sim_hours;
-            oil_hours += sim_hours;
-            air_filter_hours += sim_hours;
-            plug_hours += sim_hours;
-            generation_kwh += gen_kw * sim_hours;
-
-            if (oil_hours >= OIL_CHANGE_INTERVAL)
-                oil_hours = 0;
-            if (air_filter_hours >= AIR_FILTER_INTERVAL)
-                air_filter_hours = 0;
-            if (plug_hours >= SPARK_PLUG_INTERVAL)
-                plug_hours = 0;
-        }
-        elapsed_sec = 0.0;
-        double target_rpm = sim_running ? ENGINE_RPM_TARGET : 0.0;
-        double rpm_error = target_rpm - engine_rpm;
-        engine_rpm_integral += rpm_error * elapsed_sec;
-        double rpm_output = ENGINE_RPM_KP * rpm_error + ENGINE_RPM_KI * engine_rpm_integral;
-        //engine_rpm += rpm_output * elapsed_sec;
-        engine_rpm += rpm_output;
-        if (engine_rpm < 0) engine_rpm = 0;
-        if (engine_rpm > 4000) engine_rpm = 4000;
-        if (!sim_running) engine_rpm_integral = 0;
-        ui_update_engine_rpm((int32_t)engine_rpm);
-
-        char buf[32];
-        snprintf(buf, sizeof(buf), "%d ч", (int)oil_hours);
-        ui_update_stat_oil(buf);
-        snprintf(buf, sizeof(buf), "%d ч", (int)air_filter_hours);
-        ui_update_stat_air(buf);
-        snprintf(buf, sizeof(buf), "%d ч", (int)plug_hours);
-        ui_update_stat_plug(buf);
-        snprintf(buf, sizeof(buf), "%d ч", (int)runtime_hours);
-        ui_update_stat_runtime(buf);
-        snprintf(buf, sizeof(buf), "%.0f кВтч", generation_kwh);
-        ui_update_stat_generation(buf);
-
         lv_value_precise_t delta = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 1000.0f;
         grid_freq += delta;
         if (grid_freq > 50.05f)
@@ -163,10 +124,10 @@ int main(void) {
         
         int delta_p = (rand() % 11) - 5;
         mains_p += delta_p;
-        if (mains_p > 543)
-            mains_p = 543;
-        if (mains_p < 98)
-            mains_p = 98;
+        if (mains_p > 1543)
+            mains_p = 1543;
+        if (mains_p < 398)
+            mains_p = 398;
 
         lv_value_precise_t delta_cos = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 1000.0f;
         mains_cos += delta_cos;
@@ -198,14 +159,161 @@ int main(void) {
 
         mains_q = mains_p * sqrt(1.0 / (mains_cos * mains_cos) - 1.0);
 
+        if (kb.state.start) gpu_state = GPU_START;
+        if (kb.state.stop) {
+            if (gpu_state == GPU_LANCH || gpu_state == GPU_WORK) gpu_state = GPU_POWER_DOWN;
+            else if (gpu_state == GPU_STABILIZATION || gpu_state == GPU_START || gpu_state == GPU_WARM) gpu_state = GPU_COOL;
+        }
+
+        switch (gpu_state) {
+        case GPU_START:
+            if (engine_rpm < 100) engine_rpm += 35;
+            else if (engine_rpm < 200) engine_rpm += 34;
+            else if (engine_rpm < 300) engine_rpm += 33;
+            else if (engine_rpm < 400) engine_rpm += 32;
+            else if (engine_rpm < 500) engine_rpm += 31;
+            else if (engine_rpm < 600) engine_rpm += 30;
+            else if (engine_rpm < 700) engine_rpm += 19;
+            else if (engine_rpm < 800) engine_rpm += 18;
+            else if (engine_rpm < 900) engine_rpm += 17;
+            else if (engine_rpm < 1000) engine_rpm += 17;
+            else if (engine_rpm < 1100) engine_rpm += 17;
+            else if (engine_rpm < 1200) engine_rpm += 8;
+            else if (engine_rpm < 1500) engine_rpm += 6;
+            else gpu_state = GPU_STABILIZATION;
+            break;
+        case GPU_STABILIZATION:
+            engine_rpm = 1500 + generate_noise(10.0);
+            if (gen_ua < 6.1) gen_ua += 0.2;
+            if (gen_ub < 6.1) gen_ub += 0.18;
+            if (gen_uc < 6.1) gen_uc += 0.21;
+            if (gen_ua > 6.1 && gen_ub > 6.1 && gen_uc > 6.1) gpu_state = GPU_WARM;
+            break;
+        case GPU_WARM:
+            if (gen_t > 40.0) gpu_state = GPU_LANCH;
+            engine_rpm = 1500 + generate_noise(10.0);
+            gen_ua = 6.1 + generate_noise(0.1);
+            gen_ub = 6.1 + generate_noise(0.1);
+            gen_uc = 6.1 + generate_noise(0.1);
+            break;
+        case GPU_LANCH:
+            engine_rpm = grid_freq / 50.0 * 1500.0;
+            gen_ua = mains_ua;
+            gen_ub = mains_ub;
+            gen_uc = mains_uc;
+            gen_kw += 3;
+            if (gen_kw > 1000) gpu_state = GPU_WORK;
+            break;
+        case GPU_WORK:
+            engine_rpm = grid_freq / 50.0 * 1500.0;
+            gen_ua = mains_ua;
+            gen_ub = mains_ub;
+            gen_uc = mains_uc;
+            engine_rpm = grid_freq / 50.0 * 1500.0;
+            gen_kw = 1000 + (int)generate_noise(15);
+            break;
+        case GPU_POWER_DOWN:
+            engine_rpm = grid_freq / 50.0 * 1500.0;
+            gen_ua = mains_ua;
+            gen_ub = mains_ub;
+            gen_uc = mains_uc;
+            gen_kw -= 5;
+            if (gen_kw < 0) {
+                gen_kw = 0;
+                gpu_state = GPU_COOL;
+            }
+            break;
+        case GPU_COOL:
+            engine_rpm = 1500 + generate_noise(10.0);
+            gen_ua -= 0.5;
+            gen_ub -= 0.5;
+            gen_uc -= 0.5;
+            if (gen_ua < 0.0) gen_ua = 0.0;
+            if (gen_ub < 0.0) gen_ub = 0.0;
+            if (gen_uc < 0.0) gen_uc = 0.0;
+            if (gen_t < 60.0) gpu_state = GPU_STOPING;
+            break;
+        case GPU_STOPING:
+            engine_rpm -= 50;
+            if (engine_rpm < 0) {
+                engine_rpm = 0;
+                gpu_state = GPU_STOP;
+            }
+            break;
+        case GPU_STOP:
+            break;
+        }
+
+        if (gpu_state != GPU_STOP && gpu_state != GPU_COOL && gpu_state != GPU_STOPING) {
+            gen_t += 0.1;
+            if (gen_kw > 1.0) gen_t += 0.2;
+            if (gen_t > 85.0) gen_t = 85 + generate_noise(0.1);
+        } else {
+            gen_t -= 0.5;
+            if (gen_t < 17.2) gen_t = 17.2;
+        }
+        ui_update_engine_coolant(gen_t);
+
+        ui_update_gen_ua(gen_ua);
+        ui_update_gen_ub(gen_ub);
+        ui_update_gen_uc(gen_uc);
+
+        struct timespec ts_now;
+        clock_gettime(CLOCK_MONOTONIC, &ts_now);
+        double elapsed_sec = (ts_now.tv_sec - ts_prev.tv_sec) +
+                             (ts_now.tv_nsec - ts_prev.tv_nsec) / 1e9;
+        ts_prev = ts_now;
+        double sim_hours = elapsed_sec / 60.0;
+
+        if (gpu_state != GPU_STOP) {
+            runtime_hours += sim_hours;
+            oil_hours += sim_hours;
+            air_filter_hours += sim_hours;
+            plug_hours += sim_hours;
+            generation_kwh += gen_kw * sim_hours;
+
+            if (oil_hours >= OIL_CHANGE_INTERVAL)
+                oil_hours = 0;
+            if (air_filter_hours >= AIR_FILTER_INTERVAL)
+                air_filter_hours = 0;
+            if (plug_hours >= SPARK_PLUG_INTERVAL)
+                plug_hours = 0;
+        }
+        
+        ui_update_engine_rpm((int32_t)engine_rpm);
+        gen_freq = engine_rpm / 1500.0 * 50.0;
+        ui_update_gen_freq((float)gen_freq);
+
+        oil_pressure = engine_rpm * ENGINE_OIL_PRESSURE_MAX / ENGINE_OIL_PRESSURE_RPM_LIMIT;
+        if (oil_pressure > ENGINE_OIL_PRESSURE_MAX)
+            oil_pressure = ENGINE_OIL_PRESSURE_MAX;
+        ui_update_engine_oil((float)oil_pressure);
+
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%d ч", (int)oil_hours);
+        ui_update_stat_oil(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)air_filter_hours);
+        ui_update_stat_air(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)plug_hours);
+        ui_update_stat_plug(buf);
+        snprintf(buf, sizeof(buf), "%d ч", (int)runtime_hours);
+        ui_update_stat_runtime(buf);
+        snprintf(buf, sizeof(buf), "%.0f кВтч", generation_kwh);
+        ui_update_stat_generation(buf);
+
+        load = mains_p - gen_kw;
+
         ui_update_power(gen_kw);
         ui_update_freq(grid_freq);
-        ui_update_mains_p(mains_p);
+        ui_update_mains_p(load);
         ui_update_mains_q(mains_q);
         ui_update_mains_cos(mains_cos);
         ui_update_mains_ua(mains_ua);
         ui_update_mains_ub(mains_ub);
         ui_update_mains_uc(mains_uc);
+
+        ui_update_gen_p(gen_kw);
+        ui_update_gen_s(gen_kw / mains_cos);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
         //if (kb.state.menu) lv_screen_load(ui.screen_menu);
