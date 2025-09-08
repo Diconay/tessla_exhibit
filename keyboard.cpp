@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <string.h>
+#include <cstring>
 
 #define FPGA_DEVNODE "/dev/fpga_ctrl0"
 
@@ -13,24 +13,30 @@ struct fpga_reg_io { uint32_t offset; uint32_t value; };
 
 static const uint32_t reg_offsets[] = {0x34, 0x38};
 
-int keyboard_init(struct keyboard *kb)
-{
-    memset(kb, 0, sizeof(*kb));
-    kb->fd = open(FPGA_DEVNODE, O_RDONLY);
-    return kb->fd < 0 ? -1 : 0;
+
+Keyboard::Keyboard() : fd(-1) {
+    std::memset(&counts, 0, sizeof(counts));
+    std::memset(&state, 0, sizeof(state));
 }
 
-void keyboard_deinit(struct keyboard *kb)
-{
-    if (kb->fd >= 0) {
-        close(kb->fd);
-        kb->fd = -1;
+Keyboard::~Keyboard() {
+    deinit();
+}
+
+bool Keyboard::init() {
+    fd = open(FPGA_DEVNODE, O_RDONLY);
+    return fd >= 0;
+}
+
+void Keyboard::deinit() {
+    if (fd >= 0) {
+        close(fd);
+        fd = -1;
     }
 }
 
-bool keyboard_poll(struct keyboard *kb)
-{
-    if (kb->fd < 0)
+bool Keyboard::poll() {
+    if (fd < 0)
         return false;
 
     struct fpga_reg_io io;
@@ -38,21 +44,21 @@ bool keyboard_poll(struct keyboard *kb)
     for (unsigned i = 0; i < 2; i++) {
         io.offset = reg_offsets[i];
         io.value = 0;
-        if (ioctl(kb->fd, FPGA_IOC_READ32, &io) == 0)
+        if (ioctl(fd, FPGA_IOC_READ32, &io) == 0)
             regs[i] = io.value;
     }
 
     bool changed = false;
     uint8_t *fields[] = {
-        &kb->counts.start, &kb->counts.mode, &kb->counts.cancel, &kb->counts.left,
-        &kb->counts.stop, &kb->counts.menu, &kb->counts.up, &kb->counts.down,
-        &kb->counts.reset, &kb->counts.data, &kb->counts.enter, &kb->counts.right
+        &counts.start, &counts.mode, &counts.cancel, &counts.left,
+        &counts.stop, &counts.menu, &counts.up, &counts.down,
+        &counts.reset, &counts.data, &counts.enter, &counts.right
     };
 
     uint8_t *states[] = {
-        &kb->state.start, &kb->state.mode, &kb->state.cancel, &kb->state.left,
-        &kb->state.stop, &kb->state.menu, &kb->state.up, &kb->state.down,
-        &kb->state.reset, &kb->state.data, &kb->state.enter, &kb->state.right
+        &state.start, &state.mode, &state.cancel, &state.left,
+        &state.stop, &state.menu, &state.up, &state.down,
+        &state.reset, &state.data, &state.enter, &state.right
     };
 
     for (unsigned i = 0; i < 12; i++) {

@@ -6,9 +6,10 @@
 #include <time.h>
 #include <stdio.h>
 
+#include <cmath>
+
 #include "ui.h"
 #include "keyboard.h"
-#include <stdbool.h>
 
 #define DEFAULT_FBDEV   "/dev/fb0"
 
@@ -94,11 +95,11 @@ int main(void) {
     pthread_t tick_th;
     pthread_create(&tick_th, NULL, tick_thread, NULL);
 
-    struct ui ui;
-    ui_init(&ui);
+    UI ui;
+    ui.init();
 
-    struct keyboard kb;
-    if (keyboard_init(&kb) != 0) {
+    Keyboard kb;
+    if (!kb.init()) {
         // TODO print consol fpga open error
         return 1;
     }
@@ -110,7 +111,7 @@ int main(void) {
     while (1)
     {
         lv_timer_handler();
-        keyboard_poll(&kb);
+        kb.poll();
 
         lv_value_precise_t delta = ((lv_value_precise_t)(rand() % 11) - 5.0f) / 1000.0f;
         grid_freq += delta;
@@ -119,8 +120,8 @@ int main(void) {
         if (grid_freq < 49.95f)
             grid_freq = 49.95f;
 
-        ui_update_power(gen_kw);
-        ui_update_freq(grid_freq);
+        ui.update_power(gen_kw);
+        ui.update_freq(grid_freq);
         
         int delta_p = (rand() % 11) - 5;
         mains_p += delta_p;
@@ -157,7 +158,7 @@ int main(void) {
         if (mains_uc < 6.0f)
             mains_uc = 6.0f;
 
-        mains_q = mains_p * sqrt(1.0 / (mains_cos * mains_cos) - 1.0);
+        mains_q = mains_p * std::sqrt(1.0 / (mains_cos * mains_cos) - 1.0);
 
         if (kb.state.start) gpu_state = GPU_START;
         if (kb.state.stop) {
@@ -252,11 +253,11 @@ int main(void) {
             gen_t -= 0.5;
             if (gen_t < 17.2) gen_t = 17.2;
         }
-        ui_update_engine_coolant(gen_t);
+        ui.update_engine_coolant(gen_t);
 
-        ui_update_gen_ua(gen_ua);
-        ui_update_gen_ub(gen_ub);
-        ui_update_gen_uc(gen_uc);
+        ui.update_gen_ua(gen_ua);
+        ui.update_gen_ub(gen_ub);
+        ui.update_gen_uc(gen_uc);
 
         struct timespec ts_now;
         clock_gettime(CLOCK_MONOTONIC, &ts_now);
@@ -280,47 +281,47 @@ int main(void) {
                 plug_hours = 0;
         }
         
-        ui_update_engine_rpm((int32_t)engine_rpm);
+        ui.update_engine_rpm((int32_t)engine_rpm);
         gen_freq = engine_rpm / 1500.0 * 50.0;
-        ui_update_gen_freq((float)gen_freq);
+        ui.update_gen_freq((float)gen_freq);
 
         oil_pressure = engine_rpm * ENGINE_OIL_PRESSURE_MAX / ENGINE_OIL_PRESSURE_RPM_LIMIT;
         if (oil_pressure > ENGINE_OIL_PRESSURE_MAX)
             oil_pressure = ENGINE_OIL_PRESSURE_MAX;
-        ui_update_engine_oil((float)oil_pressure);
+        ui.update_engine_oil((float)oil_pressure);
 
         char buf[32];
         snprintf(buf, sizeof(buf), "%d ч", (int)oil_hours);
-        ui_update_stat_oil(buf);
+        ui.update_stat_oil(buf);
         snprintf(buf, sizeof(buf), "%d ч", (int)air_filter_hours);
-        ui_update_stat_air(buf);
+        ui.update_stat_air(buf);
         snprintf(buf, sizeof(buf), "%d ч", (int)plug_hours);
-        ui_update_stat_plug(buf);
+        ui.update_stat_plug(buf);
         snprintf(buf, sizeof(buf), "%d ч", (int)runtime_hours);
-        ui_update_stat_runtime(buf);
+        ui.update_stat_runtime(buf);
         snprintf(buf, sizeof(buf), "%.0f кВтч", generation_kwh);
-        ui_update_stat_generation(buf);
+        ui.update_stat_generation(buf);
 
         load = mains_p - gen_kw;
 
-        ui_update_power(gen_kw);
-        ui_update_freq(grid_freq);
-        ui_update_mains_p(load);
-        ui_update_mains_q(mains_q);
-        ui_update_mains_cos(mains_cos);
-        ui_update_mains_ua(mains_ua);
-        ui_update_mains_ub(mains_ub);
-        ui_update_mains_uc(mains_uc);
+        ui.update_power(gen_kw);
+        ui.update_freq(grid_freq);
+        ui.update_mains_p(load);
+        ui.update_mains_q(mains_q);
+        ui.update_mains_cos(mains_cos);
+        ui.update_mains_ua(mains_ua);
+        ui.update_mains_ub(mains_ub);
+        ui.update_mains_uc(mains_uc);
 
-        ui_update_gen_p(gen_kw);
-        ui_update_gen_s(gen_kw / mains_cos);
+        ui.update_gen_p(gen_kw);
+        ui.update_gen_s(gen_kw / mains_cos);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
-        //if (kb.state.menu) lv_screen_load(ui.screen_menu);
+        if (kb.state.menu) lv_screen_load(ui.screen_menu);
         //if (kb.state.data) lv_screen_load(ui.screen_data);
         
         usleep(300000);
     }
-    keyboard_deinit(&kb);
+    kb.deinit();
     return 0;
 }

@@ -1,12 +1,12 @@
 # ---- настройки ----
-CC      = gcc
+CC      = g++
 CFLAGS  = -O2 -Wall -I. -Ilvgl -Ilvgl/src -D_DEFAULT_SOURCE -DLV_CONF_INCLUDE_SIMPLE
 LDFLAGS = -lpthread -lm
 OBJDIR  = build
 TARGET  = build/TESSla
 
 # наше приложение
-APP_SRCS = main.c keyboard.c ui.c fonts/mulish.c fonts/mulish_medium48.c fonts/mulish_medium36.c fonts/mulish_medium24.c
+APP_SRCS = main.cpp keyboard.c ui.cpp fonts/mulish.c fonts/mulish_medium48.c fonts/mulish_medium36.c fonts/mulish_medium24.c
 
 # поиск FBDEV-драйвера в типичных местах (v9 и др.)
 FBDEV_SRC := $(firstword \
@@ -35,7 +35,8 @@ DRIVERS_SRCS := \
 CORE_SRCS := $(filter-out $(DRIVERS_SRCS),$(ALL_LVGL_SRCS))
 
 SRCS = $(APP_SRCS) $(CORE_SRCS) $(FBDEV_SRC)
-OBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(SRCS))
+OBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(filter %.c,$(SRCS))) \
+       $(patsubst %.cpp,$(OBJDIR)/%.o,$(filter %.cpp,$(SRCS)))
 
 all: $(TARGET)
 
@@ -44,6 +45,10 @@ $(TARGET): $(OBJS)
 
 # компиляция в build/ с автосозданием подкаталогов
 $(OBJDIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 

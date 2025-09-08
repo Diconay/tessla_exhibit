@@ -4,7 +4,15 @@
         "stdlib.h": "c",
         "lv_linux_fbdev.h": "c",
         "keyboard.h": "c",
-        "castom_fonts.h": "c"
+        "castom_fonts.h": "c",
+        "ratio": "c",
+        "system_error": "c",
+        "array": "c",
+        "functional": "c",
+        "regex": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
     },
     "cmake.sourceDirectory": "/home/dev/develop/lvgl_dev/lvgl/env_support/esp/rlottie"
 }

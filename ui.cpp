@@ -43,9 +43,11 @@ static lv_obj_t *engine_rpm_label;
 
 static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
+UI::UI() : screen_mode(nullptr), screen_menu(nullptr), screen_data(nullptr) {}
+
 void style_init(void) {
     lv_style_init(&st_panel);
-    lv_style_set_bg_color(&st_panel, lv_palette_main(COLOR_GRAFIT));
+    lv_style_set_bg_color(&st_panel, lv_color_hex(COLOR_GRAFIT));
     lv_style_set_bg_opa(&st_panel, LV_OPA_COVER);
     lv_style_set_radius(&st_panel, R);
     lv_style_set_pad_all(&st_panel, PAD);
@@ -180,126 +182,126 @@ void power_scale(lv_obj_t *screen){
     power_label = lv_label_create(scale_line);
     lv_obj_set_size(power_label, 200, LV_SIZE_CONTENT);
     lv_obj_set_style_text_color(power_label, lv_color_white(), 0);
-    lv_obj_align_to(power_label, scale_line, LV_FLEX_ALIGN_START, -45, 155);
+    lv_obj_align_to(power_label, scale_line, LV_ALIGN_CENTER, -70, 35);
     lv_obj_set_style_text_font(power_label, &font_mulish_medium36, 0);
     lv_obj_set_style_text_align(power_label, LV_TEXT_ALIGN_RIGHT, 0);
 }
 
-void ui_update_power(int32_t value)
+void UI::update_power(int32_t value)
 {
     lv_scale_set_line_needle_value(scale_line, needle_line, 102, value);
     lv_label_set_text_fmt(power_label, "%d кВт", value);
 }
 
-void ui_update_freq(float value)
+void UI::update_freq(float value)
 {
     lv_label_set_text_fmt(mains_freq_label, "%.2f Гц", value);
 }
 
 /* обновление значений панели "Сеть" */
-void ui_update_mains_p(int32_t value)
+void UI::update_mains_p(int32_t value)
 {
     lv_label_set_text_fmt(mains_p_label, "%d кВт", value);
 }
 
-void ui_update_mains_q(int32_t value)
+void UI::update_mains_q(int32_t value)
 {
     lv_label_set_text_fmt(mains_q_label, "%d кВАр", value);
 }
 
-void ui_update_mains_cos(float value)
+void UI::update_mains_cos(float value)
 {
     lv_label_set_text_fmt(mains_cos_label, "%.2f", value);
 }
 
-void ui_update_mains_ua(float value)
+void UI::update_mains_ua(float value)
 {
     lv_label_set_text_fmt(mains_ua_label, "%.2f кВ", value);
 }
 
-void ui_update_mains_ub(float value)
+void UI::update_mains_ub(float value)
 {
     lv_label_set_text_fmt(mains_ub_label, "%.2f кВ", value);
 }
 
-void ui_update_mains_uc(float value)
+void UI::update_mains_uc(float value)
 {
     lv_label_set_text_fmt(mains_uc_label, "%.2f кВ", value);
 }
 
 /* обновление панели "Статистика" */
-void ui_update_stat_oil(const char *value)
+void UI::update_stat_oil(const char *value)
 {
     lv_label_set_text(stat_oil_label, value);
 }
 
-void ui_update_stat_air(const char *value)
+void UI::update_stat_air(const char *value)
 {
     lv_label_set_text(stat_air_label, value);
 }
 
-void ui_update_stat_plug(const char *value)
+void UI::update_stat_plug(const char *value)
 {
     lv_label_set_text(stat_plug_label, value);
 }
 
-void ui_update_stat_runtime(const char *value)
+void UI::update_stat_runtime(const char *value)
 {
     lv_label_set_text(stat_runtime_label, value);
 }
 
-void ui_update_stat_generation(const char *value)
+void UI::update_stat_generation(const char *value)
 {
     lv_label_set_text(stat_generation_label, value);
 }
 
 /* обновление панели "Генератор" */
-void ui_update_gen_p(int32_t value)
+void UI::update_gen_p(int32_t value)
 {
     lv_label_set_text_fmt(gen_p_label, "%d кВт", value);
 }
 
-void ui_update_gen_s(int32_t value)
+void UI::update_gen_s(int32_t value)
 {
     lv_label_set_text_fmt(gen_s_label, "%d кВА", value);
 }
 
-void ui_update_gen_freq(float value)
+void UI::update_gen_freq(float value)
 {
     lv_label_set_text_fmt(gen_freq_label, "%.2f Гц", value);
 }
 
-void ui_update_gen_ua(float value)
+void UI::update_gen_ua(float value)
 {
     lv_label_set_text_fmt(gen_ua_label, "%.2f кВ", value);
 }
 
-void ui_update_gen_ub(float value)
+void UI::update_gen_ub(float value)
 {
     lv_label_set_text_fmt(gen_ub_label, "%.2f кВ", value);
 }
 
-void ui_update_gen_uc(float value)
+void UI::update_gen_uc(float value)
 {
     lv_label_set_text_fmt(gen_uc_label, "%.2f кВ", value);
 }
 
 /* обновление панели "Двигатель" */
-void ui_update_engine_oil(float value)
+void UI::update_engine_oil(float value)
 {
     lv_label_set_text_fmt(engine_oil_label, "%.1f бар", value);
 }
 
-void ui_update_engine_coolant(float value)
+void UI::update_engine_coolant(float value)
 {
     lv_label_set_text_fmt(engine_coolant_label, "%.1f C", value);
 }
 
-void ui_update_engine_rpm(int32_t value)
+void UI::update_engine_rpm(int32_t value)
 {
     lv_label_set_text_fmt(engine_rpm_label, "%d об/мин", value);
 }
-void ui_init(struct ui *ui)
+void UI::init()
 {
     lv_obj_t *screen_mode = lv_screen_active();
     lv_obj_set_style_bg_color(screen_mode, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
@@ -371,7 +373,7 @@ void ui_init(struct ui *ui)
     lv_obj_t *screen_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_data, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
 
-    ui->screen_mode = screen_mode;
-    ui->screen_menu = screen_menu;
-    ui->screen_data = screen_data;
+    this->screen_mode = screen_mode;
+    this->screen_menu = screen_menu;
+    this->screen_data = screen_data;
 }
