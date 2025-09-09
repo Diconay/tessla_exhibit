@@ -385,9 +385,27 @@ void UI::init()
 
     lv_obj_set_size(tv, LV_PCT(100), ver_res_menu - STATUS_BAR_H);
     lv_obj_align(tv, LV_ALIGN_TOP_MID, 0, STATUS_BAR_H);
-    lv_tabview_add_tab(tv, "Генератор");
-    lv_tabview_add_tab(tv, "ДВС");
+    lv_obj_t *tab_gen = lv_tabview_add_tab(tv, "Генератор");
+    lv_obj_t *tab_dvs = lv_tabview_add_tab(tv, "ДВС");
     this->menu_tabview = tv;
+
+    lv_obj_set_layout(tab_gen, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(tab_gen, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_all(tab_gen, PAD, 0);
+    const char *gen_names[3] = {"Вкл. АВГ", "Откл. АВГ", "Синхронизация"};
+    for (int i = 0; i < 3; i++) {
+        gen_param_vals[i] = add_row(tab_gen, gen_names[i], "0 сек");
+        gen_param_rows[i] = lv_obj_get_parent(gen_param_vals[i]);
+    }
+
+    lv_obj_set_layout(tab_dvs, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(tab_dvs, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_all(tab_dvs, PAD, 0);
+    const char *dvs_names[3] = {"Вентиляция", "Предв. смазка", "Продувка"};
+    for (int i = 0; i < 3; i++) {
+        dvs_param_vals[i] = add_row(tab_dvs, dvs_names[i], "0 сек");
+        dvs_param_rows[i] = lv_obj_get_parent(dvs_param_vals[i]);
+    }
 
 
     lv_obj_t *screen_data = lv_obj_create(NULL);

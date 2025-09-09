@@ -74,6 +74,12 @@ static double oil_hours = 0.0;
 static double air_filter_hours = 0.0;
 static double plug_hours = 0.0;
 static int menu_tab = 0;
+static int gen_params[3] = {0, 0, 0};
+static int dvs_params[3] = {0, 0, 0};
+static int menu_state = 0;
+static int menu_param_idx = 0;
+
+static int prev_value;
 
 
 float generate_noise(float amplitude) {
@@ -322,15 +328,50 @@ int main(void) {
             lv_screen_load(ui.screen_menu);
             menu_tab = 0;
             lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+            menu_state = 0;
+            menu_param_idx = 0;
         }
         if (lv_screen_active() == ui.screen_menu) {
-            if (kb.state.left && menu_tab > 0) {
-                menu_tab--;
-                lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+            if (menu_state == 0) {
+                if (kb.state.left && menu_tab > 0) {
+                    menu_tab--;
+                    lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+                }
+                if (kb.state.right && menu_tab < 1) {
+                    menu_tab++;
+                    lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+                }
+                if (kb.state.enter || kb.state.down) {
+                    menu_state = 1;
+                    menu_param_idx = 0;
+                }
+            } else if (menu_state == 1) {
+                int max_params = 3;
+                int *params = (menu_tab == 0) ? gen_params : dvs_params;
+                if (kb.state.up && menu_param_idx > 0) menu_param_idx--;
+                if (kb.state.down && menu_param_idx < max_params - 1) menu_param_idx++;
+                if (kb.state.cancel) menu_state = 0;
+                if (kb.state.enter) {
+                    menu_state = 2;
+                    prev_value = params[menu_param_idx];
+                }
+            } else if (menu_state == 2) {
+                int *params = (menu_tab == 0) ? gen_params : dvs_params;
+                if (kb.state.up) params[menu_param_idx]++;
+                if (kb.state.left) params[menu_param_idx] += 10;
+                if (kb.state.down && params[menu_param_idx] > 0) params[menu_param_idx]--;
+                if (kb.state.right && params[menu_param_idx] > 10) params[menu_param_idx] -= 10;
+                if (kb.state.enter) menu_state = 1;
+                if (kb.state.cancel) {
+                    menu_state = 1;
+                    params[menu_param_idx] = prev_value;
+                }
             }
-            if (kb.state.right && menu_tab < 1) {
-                menu_tab++;
-                lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+            for (int i = 0; i < 3; i++) {
+                lv_label_set_text_fmt(ui.gen_param_vals[i], "%d сек", gen_params[i]);
+                lv_label_set_text_fmt(ui.dvs_param_vals[i], "%d сек", dvs_params[i]);
+                lv_obj_set_style_bg_opa(ui.gen_param_rows[i], (menu_tab == 0 && menu_state > 0 && menu_param_idx == i) ? (menu_state == 2 ? LV_OPA_60 : LV_OPA_30) : LV_OPA_TRANSP, 0);
+                lv_obj_set_style_bg_opa(ui.dvs_param_rows[i], (menu_tab == 1 && menu_state > 0 && menu_param_idx == i) ? (menu_state == 2 ? LV_OPA_60 : LV_OPA_30) : LV_OPA_TRANSP, 0);
             }
         }
         //if (kb.state.data) lv_screen_load(ui.screen_data);
