@@ -38,6 +38,7 @@ public:
     lv_obj_t *screen_mode;
     lv_obj_t *screen_menu;
     lv_obj_t *screen_data;
+    lv_obj_t *menu_tabview;
 };
 
 #endif // UI_H

@@ -73,6 +73,7 @@ static double generation_kwh = 0.0;
 static double oil_hours = 0.0;
 static double air_filter_hours = 0.0;
 static double plug_hours = 0.0;
+static int menu_tab = 0;
 
 
 float generate_noise(float amplitude) {
@@ -317,7 +318,21 @@ int main(void) {
         ui.update_gen_s(gen_kw / mains_cos);
 
         if (kb.state.mode) lv_screen_load(ui.screen_mode);
-        if (kb.state.menu) lv_screen_load(ui.screen_menu);
+        if (kb.state.menu) {
+            lv_screen_load(ui.screen_menu);
+            menu_tab = 0;
+            lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+        }
+        if (lv_screen_active() == ui.screen_menu) {
+            if (kb.state.left && menu_tab > 0) {
+                menu_tab--;
+                lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+            }
+            if (kb.state.right && menu_tab < 1) {
+                menu_tab++;
+                lv_tabview_set_act(ui.menu_tabview, menu_tab, LV_ANIM_OFF);
+            }
+        }
         //if (kb.state.data) lv_screen_load(ui.screen_data);
         
         usleep(300000);

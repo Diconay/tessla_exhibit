@@ -3,6 +3,8 @@
 
 #define COLOR_GRAFIT   0x0B1E3A
 #define COLOR_TEXT     0xFFFFFF
+#define COLOR_STATUS_BAR 0x3C415D
+#define COLOR_TAB_BAR 0x4b5275
 
 static const int PAD = 10;
 static const int R   = 10;
@@ -43,7 +45,7 @@ static lv_obj_t *engine_rpm_label;
 
 static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
-UI::UI() : screen_mode(nullptr), screen_menu(nullptr), screen_data(nullptr) {}
+UI::UI() : screen_mode(nullptr), screen_menu(nullptr), screen_data(nullptr), menu_tabview(nullptr) {}
 
 void style_init(void) {
     lv_style_init(&st_panel);
@@ -112,7 +114,7 @@ static lv_obj_t *add_row(lv_obj_t *parent, const char *left, const char *right) 
 static lv_obj_t *add_status_bar(lv_obj_t *parent, const char *title) {
     lv_obj_t *bar = lv_obj_create(parent);
     lv_obj_remove_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(bar, lv_color_hex(0x3C415D), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(bar, lv_color_hex(COLOR_STATUS_BAR), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_opa(bar, LV_OPA_TRANSP, 0);
     lv_obj_set_size(bar, LV_PCT(100), STATUS_BAR_H);
@@ -369,6 +371,24 @@ void UI::init()
 
     lv_obj_t *screen_menu = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_menu, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
+
+    add_status_bar(screen_menu, "Настройки");
+    lv_display_t *disp_menu = lv_obj_get_display(screen_menu);
+    lv_coord_t ver_res_menu = lv_disp_get_ver_res(disp_menu);
+    lv_obj_t *tv = lv_tabview_create(screen_menu);
+    lv_obj_set_style_bg_opa(tv, LV_OPA_0, 0);
+    lv_obj_t *menu_tabs = lv_tabview_get_tab_bar(tv);
+
+    lv_obj_set_style_bg_color(menu_tabs, lv_color_hex(COLOR_TAB_BAR), 0);
+    lv_obj_set_style_text_color(menu_tabs, lv_color_white(), 0);
+    lv_obj_set_style_text_font(menu_tabs, &font_mulish_medium36, 0);
+
+    lv_obj_set_size(tv, LV_PCT(100), ver_res_menu - STATUS_BAR_H);
+    lv_obj_align(tv, LV_ALIGN_TOP_MID, 0, STATUS_BAR_H);
+    lv_tabview_add_tab(tv, "Генератор");
+    lv_tabview_add_tab(tv, "ДВС");
+    this->menu_tabview = tv;
+
 
     lv_obj_t *screen_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_data, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
