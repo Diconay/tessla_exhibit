@@ -45,7 +45,7 @@ static lv_obj_t *engine_rpm_label;
 
 static lv_style_t st_panel, st_title, st_row_lbl, st_row_val;
 
-UI::UI() : screen_mode(nullptr), screen_menu(nullptr), screen_data(nullptr), menu_tabview(nullptr) {}
+UI::UI() : screen_mode(nullptr), screen_menu(nullptr), screen_data(nullptr), menu_tabview(nullptr), power_chart(nullptr), power_chart_series(nullptr) {}
 
 void style_init(void) {
     lv_style_init(&st_panel);
@@ -193,6 +193,9 @@ void UI::update_power(int32_t value)
 {
     lv_scale_set_line_needle_value(scale_line, needle_line, 102, value);
     lv_label_set_text_fmt(power_label, "%d кВт", value);
+    if (power_chart && power_chart_series) {
+        lv_chart_set_next_value(power_chart, power_chart_series, value);
+    }
 }
 
 void UI::update_freq(float value)
@@ -410,8 +413,25 @@ void UI::init()
 
     lv_obj_t *screen_data = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen_data, lv_color_hex(COLOR_GRAFIT), LV_PART_MAIN);
+    add_status_bar(screen_data, "Данные");
+    lv_display_t *disp_data = lv_obj_get_display(screen_data);
+    lv_coord_t ver_res_data = lv_disp_get_ver_res(disp_data);
+    lv_obj_t *chart = lv_chart_create(screen_data);
+    lv_obj_set_size(chart, LV_PCT(100), ver_res_data - STATUS_BAR_H);
+    lv_obj_align(chart, LV_ALIGN_TOP_MID, 0, STATUS_BAR_H);
+    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(chart, 500);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1250);
+    lv_obj_set_style_bg_opa(chart, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_opa(chart, LV_OPA_TRANSP, 0);
+    lv_chart_series_t *ser = lv_chart_add_series(chart, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
+    lv_chart_set_all_value(chart, ser, 0);
+    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
+    
 
     this->screen_mode = screen_mode;
     this->screen_menu = screen_menu;
     this->screen_data = screen_data;
+    this->power_chart = chart;
+    this->power_chart_series = ser;
 }

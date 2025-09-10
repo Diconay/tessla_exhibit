@@ -331,6 +331,7 @@ int main(void) {
             menu_state = 0;
             menu_param_idx = 0;
         }
+        if (kb.state.data) lv_screen_load(ui.screen_data);
         if (lv_screen_active() == ui.screen_menu) {
             if (menu_state == 0) {
                 if (kb.state.left && menu_tab > 0) {
@@ -375,7 +376,6 @@ int main(void) {
                 lv_obj_set_style_bg_opa(ui.dvs_param_rows[i], (menu_tab == 1 && menu_state > 0 && menu_param_idx == i) ? (menu_state == 2 ? LV_OPA_60 : LV_OPA_30) : LV_OPA_TRANSP, 0);
             }
         }
-        //if (kb.state.data) lv_screen_load(ui.screen_data);
         
         usleep(300000);
     }

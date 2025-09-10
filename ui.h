@@ -39,6 +39,8 @@ public:
     lv_obj_t *screen_menu;
     lv_obj_t *screen_data;
     lv_obj_t *menu_tabview;
+    lv_obj_t *power_chart;
+    lv_chart_series_t *power_chart_series;
     lv_obj_t *gen_param_vals[3];
     lv_obj_t *gen_param_rows[3];
     lv_obj_t *dvs_param_vals[3];
