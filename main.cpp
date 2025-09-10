@@ -348,6 +348,7 @@ int main(void) {
             } else if (menu_state == 1) {
                 int max_params = 3;
                 int *params = (menu_tab == 0) ? gen_params : dvs_params;
+                if (kb.state.up && menu_param_idx == 0) menu_state = 0;
                 if (kb.state.up && menu_param_idx > 0) menu_param_idx--;
                 if (kb.state.down && menu_param_idx < max_params - 1) menu_param_idx++;
                 if (kb.state.cancel) menu_state = 0;

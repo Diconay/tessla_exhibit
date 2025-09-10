@@ -32,6 +32,7 @@ public:
 private:
     int fd;
     State counts;
+    bool read(State &cnt, State &st, bool init = false);
 };
 
 #endif // KEYBOARD_H

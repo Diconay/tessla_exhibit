@@ -25,7 +25,7 @@ Keyboard::~Keyboard() {
 
 bool Keyboard::init() {
     fd = open(FPGA_DEVNODE, O_RDONLY);
-    return fd >= 0;
+    return read(counts, state, true);
 }
 
 void Keyboard::deinit() {
@@ -36,6 +36,14 @@ void Keyboard::deinit() {
 }
 
 bool Keyboard::poll() {
+    if (!read(counts, state)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Keyboard::read(State &cnt, State &st, bool init) {
     if (fd < 0)
         return false;
 
@@ -48,30 +56,26 @@ bool Keyboard::poll() {
             regs[i] = io.value;
     }
 
-    bool changed = false;
     uint8_t *fields[] = {
-        &counts.start, &counts.mode, &counts.cancel, &counts.left,
-        &counts.stop, &counts.menu, &counts.up, &counts.down,
-        &counts.reset, &counts.data, &counts.enter, &counts.right
+        &cnt.start, &cnt.mode, &cnt.cancel, &cnt.left,
+        &cnt.stop, &cnt.menu, &cnt.up, &cnt.down,
+        &cnt.reset, &cnt.data, &cnt.enter, &cnt.right
     };
 
     uint8_t *states[] = {
-        &state.start, &state.mode, &state.cancel, &state.left,
-        &state.stop, &state.menu, &state.up, &state.down,
-        &state.reset, &state.data, &state.enter, &state.right
+        &st.start, &st.mode, &st.cancel, &st.left,
+        &st.stop, &st.menu, &st.up, &st.down,
+        &st.reset, &st.data, &st.enter, &st.right
     };
 
     for (unsigned i = 0; i < 12; i++) {
         unsigned reg_idx = i / 8;
         unsigned shift = (i % 8) * 4;
-        uint8_t cnt = (regs[reg_idx] >> shift) & 0xF;
+        uint8_t c = (regs[reg_idx] >> shift) & 0xF;
         *states[i] = 0;
-        if (cnt != *fields[i]) {
-            *states[i] = 1;
-            *fields[i] = cnt;
-            changed = true;
-        }
+        if (!init && c != *fields[i]) *states[i] = 1;
+        *fields[i] = c;
     }
 
-    return changed;
+    return true;
 }
