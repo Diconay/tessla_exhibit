@@ -420,8 +420,13 @@ void UI::init()
     lv_obj_set_size(chart, LV_PCT(100), ver_res_data - STATUS_BAR_H);
     lv_obj_align(chart, LV_ALIGN_TOP_MID, 0, STATUS_BAR_H);
     lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart, 500);
-    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 1250);
+    lv_obj_set_style_line_width(chart, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(chart, 0, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(chart, LV_OPA_TRANSP, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(chart, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_chart_set_point_count(chart, 50);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, -1250, 1250);
+    lv_chart_set_div_line_count(chart, 12, 12);
     lv_obj_set_style_bg_opa(chart, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_opa(chart, LV_OPA_TRANSP, 0);
     lv_chart_series_t *ser = lv_chart_add_series(chart, lv_color_hex(0xFF0000), LV_CHART_AXIS_PRIMARY_Y);
